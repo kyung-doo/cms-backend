@@ -11,21 +11,40 @@ mongoose.Promise = global.Promise;
 exports.checkUploadPath = ( req, res ) => {
     return new Promise(function(resolve, reject)
     {
-        const uploadPath = config.uploadUrl +'/'+ req.query.path;
-        fs.exists(uploadPath, function(exists) {
+        fs.exists(config.uploadUrl, function(exists) {
             if(exists) {
-                resolve(req, res);
+                comp();
             }
             else {
-                fs.mkdir(uploadPath, function(err) {
+                fs.mkdir(config.uploadUrl, function(err) {
                     if(err) {
                         reject(new Error('폴더 생성 에러'))
                     } else {
-                        resolve(req, res);
+                        comp();
                     }  
                 })
             }
         })
+
+        const comp = () => {
+            const uploadPath = config.uploadUrl +'/'+ req.query.path;
+            fs.exists(uploadPath, function(exists) {
+                if(exists) {
+                    resolve(req, res);
+                    comp();
+                }
+                else {
+                    fs.mkdir(uploadPath, function(err) {
+                        if(err) {
+                            reject(new Error('폴더 생성 에러'))
+                        } else {
+                            resolve(req, res);
+                            comp();
+                        }  
+                    })
+                }
+            })
+        }
     });
 }
 
