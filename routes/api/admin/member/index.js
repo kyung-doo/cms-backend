@@ -1,0 +1,21 @@
+const router = require('express').Router();
+const controller = require('./member.controller');
+
+
+// 회원목록 api
+router.get('/', controller.getMember);
+
+// 회원 닉네임 목록 api
+router.get('/nickname', controller.getMemberNickname);
+
+// 회원 아이디 목록 api
+router.get('/userid', controller.getMemberUserId);
+
+// 중복 회원 찾기 api
+router.post('/check-overap', controller.checkOverap);
+
+// 회원저장 api
+router.post('/write', controller.addMember);
+
+
+module.exports = router;
