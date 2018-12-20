@@ -12,7 +12,7 @@ router.use('/admin/auth', auth)
 router.use('/uploads', upload)
 
 //멤버 라우터
-router.use('/admin/member', /*authMiddleware,*/ member)
+router.use('/admin/member', authMiddleware, member)
 
 
 module.exports = router
