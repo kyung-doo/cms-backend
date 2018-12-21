@@ -1,14 +1,13 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var mongoose = require('mongoose');
-var dbConfig = require('./config/database');
-
-var apiRouter = require('./routes/api');
-
-var app = express();
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const mongoose = require('mongoose');
+const dbConfig = require('./config/database');
+const apiRouter = require('./routes/api');
+const globalsMiddleware = require('./middlewares/globals');
+const app = express();
 
 
 // database 연결
@@ -17,7 +16,7 @@ if(dbConfig.id && dbConfig.password) {
 } else {
   mongoose.connect('mongodb://'+dbConfig.url+':'+dbConfig.port+'/'+dbConfig.dbName, { useNewUrlParser: true });
 }
-var db = mongoose.connection;
+const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open',function(){
   console.log(' DataBase is connected!');
@@ -46,9 +45,11 @@ app.all('/*', function(req, res, next) {
 });
 
 
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
+// globals 세팅
+app.use(globalsMiddleware);
 
+
+// api 라우터
 app.use('/api', apiRouter);
 
 
@@ -56,6 +57,7 @@ app.use('/api', apiRouter);
 app.use(function(req, res, next) {
   next(createError(404));
 });
+
 
 // error handler
 app.use(function(err, req, res, next) {
