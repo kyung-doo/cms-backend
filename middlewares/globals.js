@@ -1,4 +1,4 @@
-const globals = require('../utils/globals');
+const globals = require('../globals');
 
 const globalsMiddleware = (req, res, next) => {
 

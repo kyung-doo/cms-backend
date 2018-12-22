@@ -2,15 +2,37 @@ const mongoose = require('mongoose');
 const MemberModel = require('../../../../model/Memeber');
 const MemberNicknameModel = require('../../../../model/MemberNickname');
 const MemberUserIdModel = require('../../../../model/MemberUserId');
-const globals = require('../../../../utils/globals')
+const globals = require('../../../../globals')
 
 mongoose.Promise = global.Promise;
 
 
 
 exports.getMember = (req, res) => {
+
+    const viewNum = req.query.viewNum || 10;
+    const page = req.query.page || 1;
+    
     MemberModel.find({}, {password: 0})
     .sort('-register_datetime')
+    .then((data) => {
+        res.json({
+            success: true,
+            error: null,
+            body: data
+        });
+    })
+    .catch((err) => {
+        res.json({
+            success: false,
+            error:{message:err.message},
+            body:data
+        });
+    })
+}
+
+exports.getMemberCount = (req, res) => {
+    MemberModel.count({})
     .then((data) => {
         res.json({
             success: true,

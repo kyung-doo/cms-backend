@@ -5,6 +5,9 @@ const controller = require('./member.controller');
 // 회원목록 api
 router.get('/', controller.getMember);
 
+// 회원목록 수 api
+router.get('/count', controller.getMemberCount);
+
 // 회원 닉네임 목록 api
 router.get('/nickname', controller.getMemberNickname);
 
