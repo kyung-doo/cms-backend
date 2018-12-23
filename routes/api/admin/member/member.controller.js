@@ -9,11 +9,13 @@ mongoose.Promise = global.Promise;
 
 exports.getMember = (req, res) => {
 
-    const viewNum = req.query.viewNum || 10;
-    const page = req.query.page || 1;
+    const viewNum = parseInt(req.query.viewNum || 10);
+    const page = parseInt(req.query.page || 1);
     
     MemberModel.find({}, {password: 0})
-    .sort('-register_datetime')
+    .skip( (page-1) * viewNum )
+    .limit( viewNum )
+    .sort({register_datetime:-1, _id:-1})
     .then((data) => {
         res.json({
             success: true,

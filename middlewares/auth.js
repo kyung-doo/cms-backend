@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken')
 
 const authMiddleware = (req, res, next) => {
     const token = req.headers['x-access-token'] || req.query.token;
-
     if(!token) {
         return res.json({
             success: false,
@@ -12,6 +11,8 @@ const authMiddleware = (req, res, next) => {
             body:null
         })
     }
+
+    
 
     const p = new Promise(
         (resolve, reject) => {
@@ -22,8 +23,11 @@ const authMiddleware = (req, res, next) => {
         }
     )
 
+    
+    
     // process the promise
     p.then((decoded)=>{
+        
         req.decoded = decoded
         next()
     })

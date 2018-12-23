@@ -22,10 +22,10 @@ var requestStats = require('request-stats')
 var server = http.createServer(app);
 
 
-requestStats(server, function (stats) {
-  // this function will be called every time a request to the server completes
-  //console.log(stats.req.path+" : "+stats.res.bytes)
-})
+// requestStats(server, function (stats) {
+//   console.log(stats.req.path+" : "+stats.res.bytes)
+// })
+
 
 /**
  * Listen on provided port, on all network interfaces.
