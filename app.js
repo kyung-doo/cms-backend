@@ -6,7 +6,6 @@ const logger = require('morgan');
 const mongoose = require('mongoose');
 const dbConfig = require('./config/database');
 const apiRouter = require('./routes/api');
-const globalsMiddleware = require('./middlewares/globals');
 const app = express();
 
 
@@ -27,8 +26,7 @@ db.once('open',function(){
 //app.set('views', path.join(__dirname, 'views'));
 //app.set('view engine', 'jade');
 
-app.use(logger('dev'));
-
+//app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -43,10 +41,6 @@ app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Content-Length, X-Requested-With, x-access-token");
   next();
 });
-
-
-// globals 세팅
-app.use(globalsMiddleware);
 
 
 // api 라우터

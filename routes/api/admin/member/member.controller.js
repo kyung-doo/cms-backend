@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const MemberModel = require('../../../../model/Memeber');
 const MemberNicknameModel = require('../../../../model/MemberNickname');
 const MemberUserIdModel = require('../../../../model/MemberUserId');
-const globals = require('../../../../globals')
 
 mongoose.Promise = global.Promise;
 
@@ -125,7 +124,7 @@ exports.addMember = (req, res) => {
     const Member = new MemberModel();
     Object.assign(Member, req.body);
     
-    Member.register_ip = globals.IPAdress
+    Member.register_ip = req.header ( 'x-forwarded-for') || req.connection.remoteAddress
     
 
     Member.save()

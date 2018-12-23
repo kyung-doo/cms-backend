@@ -18,8 +18,14 @@ app.set('port', port);
 /**
  * Create HTTP server.
  */
-
+var requestStats = require('request-stats')
 var server = http.createServer(app);
+
+
+requestStats(server, function (stats) {
+  // this function will be called every time a request to the server completes
+  console.log(stats.req.path+" : "+stats.req.bytes+', '+stats.res.bytes)
+})
 
 /**
  * Listen on provided port, on all network interfaces.
