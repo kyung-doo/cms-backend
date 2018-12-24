@@ -138,8 +138,18 @@ const MemberSchema = new Schema({
     register_ip : {
         type: String,
         require: true
+    },
+
+    //최종 로그인 시간
+    last_login_date: {
+        type: Date
+    },
+
+    //최종 로그인 아이피
+    last_login_ip: {
+        type: String
     }
-    
+
 });
 
 

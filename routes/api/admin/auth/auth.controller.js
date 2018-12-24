@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const MemberModel = require('../../../../model/Memeber');
+const MemberLoginModel = require('../../../../model/MemberLogin');
 const jwt = require('jsonwebtoken')
 const config = require('../../../../config/config');
 const objectUtils = require('../../../../utils/objectUtils');
@@ -14,68 +15,78 @@ exports.login = (req, res) => {
     .then(( member ) => {
         if( member ) {
             if(member.level == 1) {
-                member.comparePassword(req.body.password, (success) => {
-                    if(success) {
-
-                        jwt.sign(
-                        {
-                            _id: member._id,
-                            username: member.userid,
-                            level: member.level
-                        }, 
-                        config.jwtSecret,
-                        {
-                            expiresIn: '12h'
-                        }, 
-                        (err, token) => {
-                            if (err) {
-                                return res.json({
-                                    error:err,
-                                    success:false,
-                                    body: null
-                                });
-                            }
-
-                            return res.json({
-                                error:null,
-                                success:true,
-                                body: {
-                                    token: token,
-                                    photo: member.photo
+                var p = new Promise(function(resolve, reject) {
+                    member.comparePassword(req.body.password, (success) => {
+                        if(success) {
+                            jwt.sign(
+                            {
+                                _id: member._id,
+                                username: member.userid,
+                                level: member.level
+                            }, 
+                            config.jwtSecret,
+                            {
+                                expiresIn: '12h'
+                            }, 
+                            (err, token) => {
+                                if (err) {
+                                    reject( err )
                                 }
+                                resolve ( {token : token, member: member})
+                                
                             });
-                        });
-                        
-                    } else {
-                        return res.json({
-                            error:{message: '패스워드를 확인하세요.'},
-                            success:false,
-                            body: null
-                        });
-                    }
-                });
+                            
+                        } else {
+                            reject( new Error('패스워드를 확인하세요.') )
+                        }
+                    });
+                })
+
+                return p;
+                
+            } else {
+               throw new Error('관리자 회원이 아닙니다.');
             }
-            else {
-                return res.json({
-                    error:{message: '관리자 회원이 아닙니다.'},
-                    success:false,
-                    body: null
-                });
-            }
+        } else {
+            throw new Error('아이디를 확인하세요.');
         }
-        else {
-            return res.json({
-                error:{message: '회원 아이디를 확인하세요.'},
-                success:false,
-                body: null
-            });
-        }        
+    })
+    .then(( data ) => {
+        const MemberLogin = new MemberLoginModel();
+        MemberLogin.member_id = data.member._id;
+        MemberLogin.success = true;
+        MemberLogin.userid = req.body.userid;
+        MemberLogin.ip = req.header ( 'x-forwarded-for') || req.connection.remoteAddress;
+        MemberLogin.reason = '로그인 성공';
+        MemberLogin.useragent = req.headers['user-agent'];
+        MemberLogin.save();
+        
+        data.member.last_login_ip = req.header ( 'x-forwarded-for') || req.connection.remoteAddress;
+        data.member.last_login_date = Date.now();
+        data.member.save();
+
+        res.json({
+            error: null,
+            success: true,
+            body: {
+                token: data.token,
+                photo: data.member.photo
+            }
+        }); 
     })
     .catch((err) => {
+        const MemberLogin = new MemberLoginModel();
+        MemberLogin.success = false;
+        MemberLogin.userid = req.body.userid;
+        MemberLogin.ip = req.header ( 'x-forwarded-for') || req.connection.remoteAddress;
+        MemberLogin.reason = err.message;
+        MemberLogin.useragent = req.headers['user-agent'];
+        MemberLogin.save();
+
         res.json({
             success: false,
-            error:{message:err.message},
-            body:data
+            error: {message:err.message},
+            body: null
         });
     })
 }
