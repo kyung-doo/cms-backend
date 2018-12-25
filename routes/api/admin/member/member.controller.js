@@ -8,28 +8,49 @@ mongoose.Promise = global.Promise;
 
 
 exports.getMember = (req, res) => {
-
+    
+    const id = req.query.id;
     const viewNum = parseInt(req.query.viewNum || 10);
     const page = parseInt(req.query.page || 1);
     
-    MemberModel.find({}, {password: 0})
-    .skip( (page-1) * viewNum )
-    .limit( viewNum )
-    .sort({register_datetime:-1, _id:-1})
-    .then((data) => {
-        res.json({
-            success: true,
-            error: null,
-            body: data
-        });
-    })
-    .catch((err) => {
-        res.json({
-            success: false,
-            error:{message:err.message},
-            body:data
-        });
-    })
+    if(!id) {
+        MemberModel.find({}, {password: 0})
+        .skip( (page-1) * viewNum )
+        .limit( viewNum )
+        .sort({register_datetime:-1, _id:-1})
+        .then((data) => {
+            res.json({
+                success: true,
+                error: null,
+                body: data
+            });
+        })
+        .catch((err) => {
+            res.json({
+                success: false,
+                error:{message:err.message},
+                body:data
+            });
+        })
+    }
+    else
+    {
+        MemberModel.findOne({_id: id}, {password: 0})
+        .then((data) => {
+            res.json({
+                success: true,
+                error: null,
+                body: data
+            });
+        })
+        .catch((err) => {
+            res.json({
+                success: false,
+                error:{message:err.message},
+                body:data
+            });
+        })
+    }
 }
 
 exports.getMemberCount = (req, res) => {

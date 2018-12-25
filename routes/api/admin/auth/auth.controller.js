@@ -3,7 +3,6 @@ const MemberModel = require('../../../../model/Memeber');
 const MemberLoginModel = require('../../../../model/MemberLogin');
 const jwt = require('jsonwebtoken')
 const config = require('../../../../config/config');
-const objectUtils = require('../../../../utils/objectUtils');
 mongoose.Promise = global.Promise;
 
 
@@ -14,7 +13,7 @@ exports.login = (req, res) => {
     })
     .then(( member ) => {
         if( member ) {
-            if(member.level == 1) {
+            if(member.level > 0) {
                 var p = new Promise(function(resolve, reject) {
                     member.comparePassword(req.body.password, (success) => {
                         if(success) {
@@ -52,6 +51,7 @@ exports.login = (req, res) => {
         }
     })
     .then(( data ) => {
+
         const MemberLogin = new MemberLoginModel();
         MemberLogin.member_id = data.member._id;
         MemberLogin.success = true;
