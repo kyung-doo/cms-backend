@@ -74,6 +74,13 @@
  */
 
 /*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+
+/*!
  * vuejs-datepicker v1.5.4
  * (c) 2016-2018 Charlie Kassel
  * Released under the MIT License.

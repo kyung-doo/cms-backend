@@ -20,5 +20,8 @@ router.post('/check-overap', controller.checkOverap);
 // 회원저장 api
 router.post('/write', controller.addMember);
 
+// 회원삭제 api
+router.post('/delete', controller.removeMember);
+
 
 module.exports = router;

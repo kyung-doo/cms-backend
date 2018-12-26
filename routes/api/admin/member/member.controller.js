@@ -184,3 +184,22 @@ exports.addMember = (req, res) => {
 }
 
 
+exports.removeMember = (req, res) => {
+    const ids = req.body.ids;
+    MemberModel.findOne({_id: { $in: ids }})
+    .remove()
+    .then(() => {
+        return res.json({
+        error: null,
+        success: true,
+        body: null
+    });
+    })
+    .catch((err)=> {
+        return res.json({
+            error: {message:err.message},
+            success: false,
+            body: null
+        });
+    });
+}
