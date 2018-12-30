@@ -18,7 +18,7 @@ const MemberNicknameSchema = new Schema({
     //시작일
     start_date : {
         type: Date,
-        default: Date.now()
+        default: new Date()
     },
     //종료일
     end_date : {

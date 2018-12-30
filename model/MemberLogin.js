@@ -20,7 +20,7 @@ const MemberLoginSchema = new Schema({
     // 로그인 일시
     datetime : {
         type: Date,
-        default: Date.now()
+        default: new Date()
     },
 
     // 로그인 시도할 때에 입력한 아이디

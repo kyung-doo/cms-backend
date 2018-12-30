@@ -131,7 +131,7 @@ const MemberSchema = new Schema({
     //회원 등록일
     register_datetime : {
         type: Date,
-        default: Date.now()
+        default: new Date()
     },
 
     //회원 등록 ip

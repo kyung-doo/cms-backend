@@ -17,14 +17,24 @@ router.get('/userid', controller.getMemberUserId);
 // 중복 회원 찾기 api
 router.post('/check-overap', controller.checkOverap);
 
-// 회원저장 api
+// 회원 저장 api
 router.post('/write', controller.addMember);
 
-// 회원삭제 api
+// 회원 삭제 api
 router.post('/delete', controller.removeMember);
 
-// 회원저장 api
+// 회원 업데이트 api
 router.post('/update', controller.updateMember);
+
+
+
+
+// 회원 그룹 목록 api
+router.get('/group', controller.getMemberGroup);
+
+// 회원 그룹 저장 api
+router.post('/group/write', controller.addMemberGroup);
+
 
 
 module.exports = router;

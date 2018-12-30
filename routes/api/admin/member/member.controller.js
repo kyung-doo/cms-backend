@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const MemberModel = require('../../../../model/Memeber');
 const MemberNicknameModel = require('../../../../model/MemberNickname');
 const MemberUserIdModel = require('../../../../model/MemberUserId');
+const MemberGroupModel = require('../../../../model/MemberGroup');
+const ObjectUtils = require('../../../../utils/ObjectUtils');
 
 mongoose.Promise = global.Promise;
 
@@ -18,36 +20,36 @@ exports.getMember = (req, res) => {
         .skip( (page-1) * viewNum )
         .limit( viewNum )
         .sort({register_datetime:-1, _id:-1})
-        .then((data) => {
+        .then((members) => {
             res.json({
                 success: true,
                 error: null,
-                body: data
+                body: members
             });
         })
         .catch((err) => {
             res.json({
                 success: false,
                 error:{message:err.message},
-                body:data
+                body:null
             });
         })
     }
     else
     {
         MemberModel.findOne({_id: id}, {password: 0})
-        .then((data) => {
+        .then((member) => {
             res.json({
                 success: true,
                 error: null,
-                body: data
+                body: member
             });
         })
         .catch((err) => {
             res.json({
                 success: false,
                 error:{message:err.message},
-                body:data
+                body:null
             });
         })
     }
@@ -256,3 +258,75 @@ exports.updateMember = (req, res) => {
         });
     });
 }
+
+
+exports.getMemberGroup = (req, res) => {
+    MemberGroupModel.find({})
+    .sort({order:1})
+    .then((groups) => {
+        res.json({
+            error: null,
+            success: true,
+            body: groups
+        });
+    })
+    .catch((err)=> {
+        res.json({
+            error: {message:err.message},
+            success: false,
+            body: null
+        });
+    });
+}
+
+exports.addMemberGroup = (req, res) => {
+    const newGroups = req.body;
+    MemberGroupModel.find({})
+    .then((groups) => {
+        
+        var p = [];
+        var updateAr = [];
+        
+        groups.forEach(( group, i ) => {
+            newGroups.some((newGroup) => {
+                if(newGroup._id && group._id == newGroup._id) {
+                    Object.assign(group, newGroup);
+                    p.push(group.save());
+                    updateAr.push( i );
+                    return true;
+                }
+            });
+        });
+
+        groups.forEach(( group, i ) => {
+            if(!ObjectUtils.inArray(updateAr, i)) {
+                p.push(group.remove());
+            }
+        });
+
+        newGroups.forEach((newGroup) => {
+            if(!newGroup._id ) {
+                let group = new MemberGroupModel();
+                Object.assign(group, newGroup);
+                p.push(group.save());
+            }
+        });
+        return Promise.all(p);
+    })
+    .then(() => {
+        res.json({
+            error: null,
+            success: true,
+            body: null
+        });
+    })
+    .catch((err)=> {
+        res.json({
+            error: {message:err.message},
+            success: false,
+            body: null
+        });
+    });
+}
+
+
