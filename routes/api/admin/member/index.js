@@ -23,5 +23,8 @@ router.post('/write', controller.addMember);
 // 회원삭제 api
 router.post('/delete', controller.removeMember);
 
+// 회원저장 api
+router.post('/update', controller.updateMember);
+
 
 module.exports = router;

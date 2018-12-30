@@ -146,9 +146,7 @@ exports.checkOverap = (req, res) => {
 exports.addMember = (req, res) => {
     const Member = new MemberModel();
     Object.assign(Member, req.body);
-    
     Member.register_ip = req.header ( 'x-forwarded-for') || req.connection.remoteAddress
-    
 
     Member.save()
     .then(() => {
@@ -185,18 +183,73 @@ exports.addMember = (req, res) => {
 
 
 exports.removeMember = (req, res) => {
+    let superAdm = null;
     const ids = req.body.ids;
-    MemberModel.findOne({_id: { $in: ids }})
-    .remove()
+    MemberModel.find({_id: { $in: ids }})
+    .then(( members ) => {
+        var p = [];
+        members.forEach(( member ) => {
+            if(member.level < 2) {
+                p.push( member.remove() )
+            } else {
+                superAdm = member;
+            }
+        });
+        return Promise.all(p);
+    })
     .then(() => {
-        return res.json({
-        error: null,
-        success: true,
-        body: null
-    });
+        if(superAdm) {
+            return res.json({
+                error: {message:'최고 관리자는 삭제할 수 없습니다.'},
+                success: false,
+                body: null
+            });
+        }
+        
+        res.json({
+            error: null,
+            success: true,
+            body: null
+        });
     })
     .catch((err)=> {
-        return res.json({
+        res.json({
+            error: {message:err.message},
+            success: false,
+            body: null
+        });
+    });
+}
+
+exports.updateMember = (req, res) => {
+    MemberModel.findOne({_id:req.query.id})
+    .then((member) => {
+        let p = [];
+        if(req.body.password === '') {
+            req.body.password = member.password
+        }
+        
+        if(req.body.nickname !== member.nickname) {
+            const MemberNickname = new MemberNicknameModel();
+            MemberNickname.member_id = req.query.id;
+            MemberNickname.nickname = req.body.nickname;
+            p.push(MemberNickname.save())
+        }
+
+        Object.assign(member, req.body);
+        p.push(member.save())
+
+        return Promise.all(p)
+    })
+    .then(() => {
+        res.json({
+            error: null,
+            success: true,
+            body: null
+        });
+    })
+    .catch((err)=> {
+        res.json({
             error: {message:err.message},
             success: false,
             body: null
