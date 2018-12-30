@@ -3,7 +3,7 @@ const MemberModel = require('../../../../model/Memeber');
 const MemberNicknameModel = require('../../../../model/MemberNickname');
 const MemberUserIdModel = require('../../../../model/MemberUserId');
 const MemberGroupModel = require('../../../../model/MemberGroup');
-const ObjectUtils = require('../../../../utils/ObjectUtils');
+const objectUtils = require('../../../../utils/objectUtils');
 
 mongoose.Promise = global.Promise;
 
@@ -299,7 +299,7 @@ exports.addMemberGroup = (req, res) => {
         });
 
         groups.forEach(( group, i ) => {
-            if(!ObjectUtils.inArray(updateAr, i)) {
+            if(!objectUtils.inArray(updateAr, i)) {
                 p.push(group.remove());
             }
         });
