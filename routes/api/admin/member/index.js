@@ -8,9 +8,6 @@ router.get('/', controller.getMember);
 // 회원목록 수 api
 router.get('/count', controller.getMemberCount);
 
-// 회원 닉네임 목록 api
-router.get('/nickname', controller.getMemberNickname);
-
 // 회원 아이디 목록 api
 router.get('/userid', controller.getMemberUserId);
 

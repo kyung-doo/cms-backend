@@ -8,7 +8,8 @@ const MemberLoginSchema = new Schema({
 
     // 로그인한 회원 아이디
     member_id : {
-        type: ObjectId
+        type: ObjectId,
+        ref: 'Member'
     },
 
     // 로그인 성공 여부

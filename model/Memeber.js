@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validate = require('../utils/validate');
 const bcrypt = require('bcrypt-nodejs');
+const ObjectId = mongoose.Schema.Types.ObjectId;
 const Schema = mongoose.Schema;
 const SALT_WORK_FACTOR = 10;
 mongoose.Promise = global.Promise;
@@ -39,9 +40,6 @@ const MemberSchema = new Schema({
         type: String, 
         required: '이름을 입력하세요.'
     }, 
-
-    // 닉네임
-    nickname : String,
 
     // 회원 연락처
     phone : {
@@ -148,7 +146,13 @@ const MemberSchema = new Schema({
     //최종 로그인 아이피
     last_login_ip: {
         type: String
-    }
+    },
+
+    groups : [{
+        type: ObjectId,
+        ref: 'MemberGroup',
+        require: true
+    }]
 
 });
 

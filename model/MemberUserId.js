@@ -7,7 +7,7 @@ const MemberUserIdSchema = new Schema({
     // 멤버 아이디
     member_id : {
         type: ObjectId,
-        required: true
+        ref: 'Member'
     },
     // 회원 아이디
     userid : { 
@@ -22,7 +22,8 @@ const MemberUserIdSchema = new Schema({
         lowercase: true,
         required:true
     }, 
-    //회원 상태 0 : 회원, 1 : 탈퇴회원, 2 : 휴면회원
+    //회원 상태 
+    //0 : 회원, 1 : 차단회원, 2 : 휴면회원, 3 : 탈퇴회원
     status: {
         type: Number,
         default: 0

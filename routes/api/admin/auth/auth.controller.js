@@ -14,37 +14,40 @@ exports.login = (req, res) => {
     .then(( member ) => {
         if( member ) {
             if(member.level > 0) {
-                var p = new Promise(function(resolve, reject) {
-                    member.comparePassword(req.body.password, (success) => {
-                        if(success) {
-                            jwt.sign(
-                            {
-                                _id: member._id,
-                                username: member.userid,
-                                level: member.level
-                            }, 
-                            config.jwtSecret,
-                            {
-                                expiresIn: '12h'
-                            }, 
-                            (err, token) => {
-                                if (err) {
-                                    reject( err )
-                                }
-                                resolve ( {token : token, member: member})
+                if(!member.denied) {
+                    var p = new Promise(function(resolve, reject) {
+                        member.comparePassword(req.body.password, (success) => {
+                            if(success) {
+                                jwt.sign(
+                                {
+                                    _id: member._id,
+                                    username: member.userid,
+                                    level: member.level
+                                }, 
+                                config.jwtSecret,
+                                {
+                                    expiresIn: '12h'
+                                }, 
+                                (err, token) => {
+                                    if (err) {
+                                        reject( err )
+                                    }
+                                    resolve ( {token : token, member: member})
+                                    
+                                });
                                 
-                            });
-                            
-                        } else {
-                            reject( new Error('패스워드를 확인하세요.') )
-                        }
-                    });
-                })
-
-                return p;
-                
-            } else {
-               throw new Error('관리자 회원이 아닙니다.');
+                            } else {
+                                reject( new Error('패스워드를 확인하세요.') )
+                            }
+                        });
+                    })
+                    return p;
+                } else {
+                    throw new Error('접근 권한이 없습니다.');
+                }
+            } 
+            else {
+               throw new Error('접근 권한이 없습니다.');
             }
         } else {
             throw new Error('아이디를 확인하세요.');

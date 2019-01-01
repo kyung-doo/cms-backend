@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
+
 const MemberModel = require('../../../../model/Memeber');
-const MemberNicknameModel = require('../../../../model/MemberNickname');
 const MemberUserIdModel = require('../../../../model/MemberUserId');
 const MemberGroupModel = require('../../../../model/MemberGroup');
+const MemberGroupMemberModel = require('../../../../model/MemberGroupMember');
+
 const objectUtils = require('../../../../utils/objectUtils');
 
 mongoose.Promise = global.Promise;
@@ -73,23 +75,6 @@ exports.getMemberCount = (req, res) => {
     })
 }
 
-exports.getMemberNickname = (req, res) => {
-    MemberNicknameModel.find({})
-    .then((data) => {
-        res.json({
-            success: true,
-            error: null,
-            body: data
-        });
-    })
-    .catch((err) => {
-        res.json({
-            success: false,
-            error:{message:err.message},
-            body:data
-        });
-    })
-}
 
 
 exports.getMemberUserId = (req, res) => {
@@ -115,12 +100,12 @@ exports.checkOverap = (req, res) => {
     
     MemberUserIdModel.findOne({
         $or:[
-            {userid:req.body.userid}, 
-            {email:req.body.email}
+            {userid: req.body.userid}, 
+            {email: req.body.email}
         ]
     })
-    .then(( data ) => {
-        if(data) 
+    .then(( member ) => {
+        if(member) 
         {
             res.json({
                 error: {message: '이미 가입된 아이디 또는 이메일입니다.'},
@@ -149,22 +134,22 @@ exports.addMember = (req, res) => {
     const Member = new MemberModel();
     Object.assign(Member, req.body);
     Member.register_ip = req.header ( 'x-forwarded-for') || req.connection.remoteAddress
-
     Member.save()
-    .then(() => {
+    .then(( member ) => {
+        var p = [];
         const MemberUserId = new MemberUserIdModel();
         MemberUserId.member_id = Member._id;
         MemberUserId.userid = Member.userid;
         MemberUserId.email = Member.email;
-        return MemberUserId.save();
-    })
-    .then(() => {
-        if(Member.nickname) {
-            const MemberNickname = new MemberNicknameModel();
-            MemberNickname.member_id = Member._id;
-            MemberNickname.nickname = Member.nickname;
-            return MemberNickname.save();
-        }
+        p.push(MemberUserId.save())
+        member.groups.forEach((group) => {
+            const MemberGroupMember = new MemberGroupMemberModel();
+            MemberGroupMember.member_id = member._id;
+            MemberGroupMember.group_id = group;
+            p.push(MemberGroupMember.save());
+        });
+
+        return Promise.all(p);
     })
     .then(() => {
         return res.json({
@@ -186,17 +171,21 @@ exports.addMember = (req, res) => {
 
 exports.removeMember = (req, res) => {
     let superAdm = null;
-    const ids = req.body.ids;
-    MemberModel.find({_id: { $in: ids }})
-    .then(( members ) => {
+    
+    MemberModel.find({_id: { $in: req.body.ids }})
+    .then((members) => {
         var p = [];
-        members.forEach(( member ) => {
+        let memIds = [];
+        members.forEach(( member, i ) => {
             if(member.level < 2) {
-                p.push( member.remove() )
+                memIds.push(member._id);
+                p.push( member.remove())
             } else {
                 superAdm = member;
             }
         });
+        p.push( MemberUserIdModel.deleteMany({member_id: { $in: memIds }}) )
+        p.push( MemberGroupMemberModel.deleteMany({member_id: { $in: memIds }}) )
         return Promise.all(p);
     })
     .then(() => {
@@ -207,7 +196,6 @@ exports.removeMember = (req, res) => {
                 body: null
             });
         }
-        
         res.json({
             error: null,
             success: true,
@@ -224,24 +212,35 @@ exports.removeMember = (req, res) => {
 }
 
 exports.updateMember = (req, res) => {
-    MemberModel.findOne({_id:req.query.id})
-    .then((member) => {
+    
+    Promise.all([
+        MemberModel.findOne({_id:req.query.id}), 
+        MemberUserIdModel.findOne({member_id:req.query.id}),
+        MemberGroupMemberModel.deleteMany({member_id:req.query.id})
+    ])
+    .then(([member, memberUserId]) => {
+        
         let p = [];
         if(req.body.password === '') {
             req.body.password = member.password
         }
-        
-        if(req.body.nickname !== member.nickname) {
-            const MemberNickname = new MemberNicknameModel();
-            MemberNickname.member_id = req.query.id;
-            MemberNickname.nickname = req.body.nickname;
-            p.push(MemberNickname.save())
-        }
 
         Object.assign(member, req.body);
-        p.push(member.save())
+        p.push(member.save());
 
-        return Promise.all(p)
+        memberUserId.userid = member.userid;
+        memberUserId.email = member.email;
+        memberUserId.status = member.denied ? 1 : 0;
+        p.push(memberUserId.save());
+
+        member.groups.forEach((group) => {
+            const MemberGroupMember = new MemberGroupMemberModel();
+            MemberGroupMember.member_id = member._id;
+            MemberGroupMember.group_id = group;
+            p.push(MemberGroupMember.save());
+        });
+
+        return Promise.all(p);
     })
     .then(() => {
         res.json({
@@ -261,14 +260,37 @@ exports.updateMember = (req, res) => {
 
 
 exports.getMemberGroup = (req, res) => {
+
+    var Groups =[];
     MemberGroupModel.find({})
     .sort({order:1})
     .then((groups) => {
+        Groups = groups;
+        var p = [];
+        groups.forEach((group) => {
+            p.push(MemberGroupMemberModel.count({group_id:group._id}));
+        });
+        return Promise.all(p);
+    })
+    .then(( counts ) => {
+        var newGroups = [];
+        Groups.forEach((group, i) => {
+            newGroup = {};
+            newGroup._id = group._id;
+            newGroup.title = group.title;
+            newGroup.datetime = group.datetime;
+            newGroup.order = group.order;
+            newGroup.description = group.description;
+            newGroup.count = counts[i];
+            newGroups.push(newGroup);
+        });
+        
         res.json({
             error: null,
             success: true,
-            body: groups
+            body: newGroups
         });
+        
     })
     .catch((err)=> {
         res.json({
@@ -281,6 +303,7 @@ exports.getMemberGroup = (req, res) => {
 
 exports.addMemberGroup = (req, res) => {
     const newGroups = req.body;
+    let removeGroups = [];
     MemberGroupModel.find({})
     .then((groups) => {
         
@@ -300,6 +323,7 @@ exports.addMemberGroup = (req, res) => {
 
         groups.forEach(( group, i ) => {
             if(!objectUtils.inArray(updateAr, i)) {
+                removeGroups.push(group._id);
                 p.push(group.remove());
             }
         });
@@ -310,6 +334,26 @@ exports.addMemberGroup = (req, res) => {
                 Object.assign(group, newGroup);
                 p.push(group.save());
             }
+        });
+        return Promise.all(p);
+    })
+    .then(() => {
+        return Promise.all([
+            MemberModel.find({ groups:{ $in: removeGroups }}), 
+            MemberGroupMemberModel.deleteMany({ group_id:{ $in: removeGroups }})
+        ]);
+    })
+    .then(( [members] ) => {
+        var p = [];
+        members.forEach((member) => {
+            var ar = [];
+            member.groups.forEach(( id ) => {
+                if(!objectUtils.inArrayEquals( removeGroups, id)) {
+                    ar.push(id)
+                }
+            });
+            member.groups = ar;
+            p.push(member.save())
         });
         return Promise.all(p);
     })
@@ -328,5 +372,3 @@ exports.addMemberGroup = (req, res) => {
         });
     });
 }
-
-
