@@ -22,6 +22,7 @@ exports.getMember = (req, res) => {
         .skip( (page-1) * viewNum )
         .limit( viewNum )
         .sort({register_datetime:-1, _id:-1})
+        .populate('groups', 'title')
         .then((members) => {
             res.json({
                 success: true,
