@@ -4,6 +4,7 @@ const MemberModel = require('../../../../model/Memeber');
 const MemberUserIdModel = require('../../../../model/MemberUserId');
 const MemberGroupModel = require('../../../../model/MemberGroup');
 const MemberGroupMemberModel = require('../../../../model/MemberGroupMember');
+const MemberLoginModel = require('../../../../model/MemberLogin');
 
 const objectUtils = require('../../../../utils/objectUtils');
 
@@ -372,4 +373,48 @@ exports.addMemberGroup = (req, res) => {
             body: null
         });
     });
+}
+
+
+exports.getLoginLog = (req, res) => {
+    
+    const viewNum = parseInt(req.query.viewNum || 10);
+    const page = parseInt(req.query.page || 1);
+    
+    MemberLoginModel.find({})
+    .skip( (page-1) * viewNum )
+    .limit( viewNum )
+    .sort({datetime:-1, _id:-1})
+    .then((loginLogs) => {
+        res.json({
+            success: true,
+            error: null,
+            body: loginLogs
+        });
+    })
+    .catch((err) => {
+        res.json({
+            success: false,
+            error:{message:err.message},
+            body:null
+        });
+    })   
+}
+
+exports.getLoginLogCount = (req, res) => {
+    MemberLoginModel.count({})
+    .then((data) => {
+        res.json({
+            success: true,
+            error: null,
+            body: data
+        });
+    })
+    .catch((err) => {
+        res.json({
+            success: false,
+            error:{message:err.message},
+            body:data
+        });
+    })
 }

@@ -34,4 +34,14 @@ router.post('/group/write', controller.addMemberGroup);
 
 
 
+
+// 로그인 로그 api
+router.get('/login-log', controller.getLoginLog);
+
+// 로그인 로그 수 api
+router.get('/login-log/count', controller.getLoginLogCount);
+
+
+
+
 module.exports = router;
